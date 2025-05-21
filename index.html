@@ -1,13 +1,143 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ola mundo</title>
+    <title>Pong - Jogo para Dois Jogadores</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .game-container {
+            position: relative;
+            width: 800px;
+            height: 400px;
+        }
+
+        canvas {
+            border: 2px solid white;
+            background-color: black;
+        }
+    </style>
 </head>
 <body>
-    <h1>login</h1>
-    <input type="text">
-    <input type="text">
+    <div class="game-container">
+        <canvas id="pong" width="800" height="400"></canvas>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('pong');
+        const context = canvas.getContext('2d');
+
+        // Definindo o paddle
+        const paddleWidth = 10, paddleHeight = 100;
+        const ballSize = 10;
+
+        // Paddles
+        let leftPaddle = { x: 0, y: canvas.height / 2 - paddleHeight / 2, width: paddleWidth, height: paddleHeight, dy: 0 };
+        let rightPaddle = { x: canvas.width - paddleWidth, y: canvas.height / 2 - paddleHeight / 2, width: paddleWidth, height: paddleHeight, dy: 0 };
+
+        // Bola
+        let ball = {
+            x: canvas.width / 2,
+            y: canvas.height / 2,
+            dx: 3,
+            dy: 3,
+            radius: ballSize
+        };
+
+        // Função de movimento do paddle
+        function movePaddles() {
+            if (leftPaddle.dy < 0 && leftPaddle.y > 0) leftPaddle.y += leftPaddle.dy;
+            if (leftPaddle.dy > 0 && leftPaddle.y < canvas.height - leftPaddle.height) leftPaddle.y += leftPaddle.dy;
+
+            if (rightPaddle.dy < 0 && rightPaddle.y > 0) rightPaddle.y += rightPaddle.dy;
+            if (rightPaddle.dy > 0 && rightPaddle.y < canvas.height - rightPaddle.height) rightPaddle.y += rightPaddle.dy;
+        }
+
+        // Função de movimento da bola
+        function moveBall() {
+            ball.x += ball.dx;
+            ball.y += ball.dy;
+
+            // Detectando colisões com o teto e o chão
+            if (ball.y + ball.radius > canvas.height || ball.y - ball.radius < 0) ball.dy = -ball.dy;
+
+            // Detectando colisões com paddles
+            if (ball.x - ball.radius < leftPaddle.x + leftPaddle.width && ball.y > leftPaddle.y && ball.y < leftPaddle.y + leftPaddle.height) {
+                ball.dx = -ball.dx;
+            }
+            if (ball.x + ball.radius > rightPaddle.x && ball.y > rightPaddle.y && ball.y < rightPaddle.y + rightPaddle.height) {
+                ball.dx = -ball.dx;
+            }
+
+            // Se a bola sair das bordas
+            if (ball.x - ball.radius < 0 || ball.x + ball.radius > canvas.width) {
+                resetBall();
+            }
+        }
+
+        // Resetando a bola
+        function resetBall() {
+            ball.x = canvas.width / 2;
+            ball.y = canvas.height / 2;
+            ball.dx = -ball.dx;
+            ball.dy = 3;
+        }
+
+        // Função para desenhar
+        function draw() {
+            context.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Desenhando paddles
+            context.fillStyle = 'white';
+            context.fillRect(leftPaddle.x, leftPaddle.y, leftPaddle.width, leftPaddle.height);
+            context.fillRect(rightPaddle.x, rightPaddle.y, rightPaddle.width, rightPaddle.height);
+            
+            // Desenhando bola
+            context.beginPath();
+            context.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
+            context.fill();
+        }
+
+        // Atualizando o jogo
+        function update() {
+            movePaddles();
+            moveBall();
+            draw();
+        }
+
+        // Definindo controles para os paddles
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'ArrowUp') rightPaddle.dy = -5;
+            if (event.key === 'ArrowDown') rightPaddle.dy = 5;
+            if (event.key === 'w') leftPaddle.dy = -5;
+            if (event.key === 's') leftPaddle.dy = 5;
+        });
+
+        document.addEventListener('keyup', (event) => {
+            if (event.key === 'ArrowUp' || event.key === 'ArrowDown') rightPaddle.dy = 0;
+            if (event.key === 'w' || event.key === 's') leftPaddle.dy = 0;
+        });
+
+        // Loop principal do jogo
+        function gameLoop() {
+            update();
+            requestAnimationFrame(gameLoop);
+        }
+
+        gameLoop();
+    </script>
 </body>
 </html>
